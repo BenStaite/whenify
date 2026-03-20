@@ -33,25 +33,22 @@ describe("relativeDate — minutes (past)", () => {
   });
 });
 
-describe("relativeDate — minutes (future, prefix)", () => {
+describe("relativeDate — minutes (future)", () => {
   test("in a minute (60s)", () => {
     expect(relativeDate(sec(60), { now: NOW })).toBe("in a minute");
   });
   test("in 5 minutes", () => {
     expect(relativeDate(min(5), { now: NOW })).toBe("in 5 minutes");
   });
-});
-
-describe("relativeDate — minutes (future, suffix)", () => {
-  test("a minute away", () => {
-    expect(relativeDate(sec(60), { now: NOW, future: "suffix" })).toBe(
-      "a minute away"
-    );
+  test("a minute away (custom future template)", () => {
+    expect(
+      relativeDate(sec(60), { now: NOW, format: { future: "{} away" } }),
+    ).toBe("a minute away");
   });
-  test("5 minutes away", () => {
-    expect(relativeDate(min(5), { now: NOW, future: "suffix" })).toBe(
-      "5 minutes away"
-    );
+  test("5 minutes away (custom future template)", () => {
+    expect(
+      relativeDate(min(5), { now: NOW, format: { future: "{} away" } }),
+    ).toBe("5 minutes away");
   });
 });
 
@@ -62,13 +59,13 @@ describe("relativeDate — hours", () => {
   test("2 hours ago", () => {
     expect(relativeDate(hr(-2), { now: NOW })).toBe("2 hours ago");
   });
-  test("in 2 hours (prefix)", () => {
+  test("in 2 hours", () => {
     expect(relativeDate(hr(2), { now: NOW })).toBe("in 2 hours");
   });
-  test("2 hours away (suffix)", () => {
-    expect(relativeDate(hr(2), { now: NOW, future: "suffix" })).toBe(
-      "2 hours away"
-    );
+  test("2 hours away (custom future template)", () => {
+    expect(
+      relativeDate(hr(2), { now: NOW, format: { future: "{} away" } }),
+    ).toBe("2 hours away");
   });
   test("21 hours ago", () => {
     expect(relativeDate(hr(-21), { now: NOW })).toBe("21 hours ago");
@@ -82,11 +79,10 @@ describe("relativeDate — yesterday / tomorrow", () => {
   test("tomorrow (25h away)", () => {
     expect(relativeDate(hr(25), { now: NOW })).toBe("tomorrow");
   });
-  test("tomorrow ignores future option", () => {
-    // "tomorrow" is a special label, not affected by prefix/suffix option
-    expect(relativeDate(hr(25), { now: NOW, future: "suffix" })).toBe(
-      "tomorrow"
-    );
+  test("tomorrow is unaffected by format option", () => {
+    expect(
+      relativeDate(hr(25), { now: NOW, format: { future: "{} away" } }),
+    ).toBe("tomorrow");
   });
 });
 
@@ -97,10 +93,10 @@ describe("relativeDate — days", () => {
   test("in 4 days", () => {
     expect(relativeDate(day(4), { now: NOW })).toBe("in 4 days");
   });
-  test("4 days away (suffix)", () => {
-    expect(relativeDate(day(4), { now: NOW, future: "suffix" })).toBe(
-      "4 days away"
-    );
+  test("4 days away (custom future template)", () => {
+    expect(
+      relativeDate(day(4), { now: NOW, format: { future: "{} away" } }),
+    ).toBe("4 days away");
   });
   test("25 days ago", () => {
     expect(relativeDate(day(-25), { now: NOW })).toBe("25 days ago");
@@ -132,10 +128,109 @@ describe("relativeDate — years", () => {
   test("3 years ago", () => {
     expect(relativeDate(yr(-3), { now: NOW })).toBe("3 years ago");
   });
-  test("in 3 years (suffix)", () => {
-    expect(relativeDate(yr(3), { now: NOW, future: "suffix" })).toBe(
-      "3 years away"
+  test("3 years away (custom future template)", () => {
+    expect(
+      relativeDate(yr(3), { now: NOW, format: { future: "{} away" } }),
+    ).toBe("3 years away");
+  });
+});
+
+describe("relativeDate — units: short", () => {
+  test("1 min ago", () => {
+    expect(relativeDate(sec(-60), { now: NOW, units: "short" })).toBe(
+      "1 min ago",
     );
+  });
+  test("5 mins ago", () => {
+    expect(relativeDate(min(-5), { now: NOW, units: "short" })).toBe(
+      "5 mins ago",
+    );
+  });
+  test("1 hr ago", () => {
+    expect(relativeDate(hr(-1), { now: NOW, units: "short" })).toBe("1 hr ago");
+  });
+  test("in 2 hrs", () => {
+    expect(relativeDate(hr(2), { now: NOW, units: "short" })).toBe("in 2 hrs");
+  });
+  test("4 days ago (short = same as long)", () => {
+    expect(relativeDate(day(-4), { now: NOW, units: "short" })).toBe(
+      "4 days ago",
+    );
+  });
+  test("1 mo ago", () => {
+    expect(relativeDate(day(-40), { now: NOW, units: "short" })).toBe(
+      "1 mo ago",
+    );
+  });
+  test("3 mos ago", () => {
+    expect(relativeDate(mo(-3), { now: NOW, units: "short" })).toBe(
+      "3 mos ago",
+    );
+  });
+  test("1 yr ago", () => {
+    expect(relativeDate(yr(-1), { now: NOW, units: "short" })).toBe("1 yr ago");
+  });
+  test("in 3 yrs", () => {
+    expect(relativeDate(yr(3), { now: NOW, units: "short" })).toBe("in 3 yrs");
+  });
+});
+
+describe("relativeDate — units: narrow", () => {
+  test("1m ago", () => {
+    expect(relativeDate(sec(-60), { now: NOW, units: "narrow" })).toBe(
+      "1m ago",
+    );
+  });
+  test("5m ago", () => {
+    expect(relativeDate(min(-5), { now: NOW, units: "narrow" })).toBe("5m ago");
+  });
+  test("1h ago", () => {
+    expect(relativeDate(hr(-1), { now: NOW, units: "narrow" })).toBe("1h ago");
+  });
+  test("in 2h", () => {
+    expect(relativeDate(hr(2), { now: NOW, units: "narrow" })).toBe("in 2h");
+  });
+  test("4d ago", () => {
+    expect(relativeDate(day(-4), { now: NOW, units: "narrow" })).toBe("4d ago");
+  });
+  test("1mo ago", () => {
+    expect(relativeDate(day(-40), { now: NOW, units: "narrow" })).toBe(
+      "1mo ago",
+    );
+  });
+  test("3mo ago", () => {
+    expect(relativeDate(mo(-3), { now: NOW, units: "narrow" })).toBe("3mo ago");
+  });
+  test("1y ago", () => {
+    expect(relativeDate(yr(-1), { now: NOW, units: "narrow" })).toBe("1y ago");
+  });
+  test("in 3y", () => {
+    expect(relativeDate(yr(3), { now: NOW, units: "narrow" })).toBe("in 3y");
+  });
+  test("narrow + suffix template", () => {
+    expect(
+      relativeDate(hr(2), {
+        now: NOW,
+        units: "narrow",
+        format: { future: "{} away" },
+      }),
+    ).toBe("2h away");
+  });
+});
+
+describe("relativeDate — format.past customization", () => {
+  test("custom past template", () => {
+    expect(
+      relativeDate(hr(-2), { now: NOW, format: { past: "{} in the past" } }),
+    ).toBe("2 hours in the past");
+  });
+  test("both templates custom", () => {
+    expect(
+      relativeDate(hr(2), {
+        now: NOW,
+        format: { past: "{} back", future: "{} from now" },
+      }),
+    ).toBe("2 hours from now");
   });
 });
 
@@ -145,7 +240,7 @@ describe("relativeDate — input types", () => {
   });
   test("accepts an ISO string", () => {
     expect(relativeDate(hr(-2).toISOString(), { now: NOW })).toBe(
-      "2 hours ago"
+      "2 hours ago",
     );
   });
   test("accepts a Date object", () => {

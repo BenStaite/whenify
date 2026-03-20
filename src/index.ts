@@ -1,15 +1,74 @@
-export interface RelativeDateOptions {
-  /**
-   * The reference date to compare against. Defaults to `new Date()`.
-   */
-  now?: Date | number;
+export type UnitStyle = "long" | "short" | "narrow";
 
+export interface RelativeDateFormat {
+  /** Template for past dates. `{}` is replaced with the formatted value. Default: `"{} ago"` */
+  past?: string;
+  /** Template for future dates. `{}` is replaced with the formatted value. Default: `"in {}"` */
+  future?: string;
+}
+
+export interface RelativeDateOptions {
+  /** The reference date to compare against. Defaults to `new Date()`. */
+  now?: Date | number;
   /**
-   * How to express future dates.
-   * - `"prefix"` (default): "in 2 hours", "in 3 days"
-   * - `"suffix"`: "2 hours away", "3 days away"
+   * Verbosity of unit labels.
+   * - `"long"` (default): "minute", "hour", "day", "month", "year"
+   * - `"short"`: "min", "hr", "day", "mo", "yr"
+   * - `"narrow"`: "m", "h", "d", "mo", "y" (no space, numeric only)
    */
-  future?: "prefix" | "suffix";
+  units?: UnitStyle;
+  /**
+   * Templates controlling how past and future values are wrapped.
+   * Use `{}` as the placeholder for the formatted value.
+   *
+   * @example
+   * // defaults
+   * { past: "{} ago", future: "in {}" }
+   * // suffix style
+   * { future: "{} away" }
+   * // custom
+   * { past: "{} in the past", future: "{} from now" }
+   */
+  format?: RelativeDateFormat;
+}
+
+type UnitKey = "minute" | "hour" | "day" | "month" | "year";
+
+// [singular, plural] — narrow uses only singular (always numeric, no space)
+const UNIT_LABELS: Record<UnitStyle, Record<UnitKey, [string, string]>> = {
+  long: {
+    minute: ["minute", "minutes"],
+    hour: ["hour", "hours"],
+    day: ["day", "days"],
+    month: ["month", "months"],
+    year: ["year", "years"],
+  },
+  short: {
+    minute: ["min", "mins"],
+    hour: ["hr", "hrs"],
+    day: ["day", "days"],
+    month: ["mo", "mos"],
+    year: ["yr", "yrs"],
+  },
+  narrow: {
+    minute: ["m", "m"],
+    hour: ["h", "h"],
+    day: ["d", "d"],
+    month: ["mo", "mo"],
+    year: ["y", "y"],
+  },
+};
+
+function unitLabel(n: number, key: UnitKey, style: UnitStyle): string {
+  const [sing, plur] = UNIT_LABELS[style][key];
+  if (style === "narrow") return `${n}${sing}`;
+  return `${n} ${n === 1 ? sing : plur}`;
+}
+
+function articleUnit(key: UnitKey, style: UnitStyle): string {
+  if (style !== "long") return unitLabel(1, key, style);
+  const article = key === "hour" ? "an" : "a";
+  return `${article} ${UNIT_LABELS.long[key][0]}`;
 }
 
 /**
@@ -22,7 +81,7 @@ export interface RelativeDateOptions {
  */
 export function relativeDate(
   date: Date | number | string,
-  options: RelativeDateOptions = {}
+  options: RelativeDateOptions = {},
 ): string {
   const now = options.now != null ? new Date(options.now) : new Date();
   const then = new Date(date as string | number | Date);
@@ -42,54 +101,41 @@ export function relativeDate(
   const months = days / 30.44;
   const years = days / 365.25;
 
-  const past = (s: string) => `${s} ago`;
-  const future = (s: string) =>
-    options.future === "suffix" ? `${s} away` : `in ${s}`;
-  const format = (s: string) => (isFuture ? future(s) : past(s));
+  const style = options.units ?? "long";
+  const pastTpl = options.format?.past ?? "{} ago";
+  const futureTpl = options.format?.future ?? "in {}";
+  const fmt = (s: string) => (isFuture ? futureTpl : pastTpl).replace("{}", s);
 
   // < 30 seconds either way
   if (seconds < 30) return "just now";
 
-  // < 90 seconds → "a minute"
-  if (seconds < 90) return format("a minute");
+  // < 90 seconds → "a minute" / "1 min" / "1m"
+  if (seconds < 90) return fmt(articleUnit("minute", style));
 
-  // < 45 minutes → "X minutes"
-  if (minutes < 45) {
-    const n = Math.round(minutes);
-    return format(`${n} ${n === 1 ? "minute" : "minutes"}`);
-  }
+  // < 45 minutes → "X minutes" / "X mins" / "Xm"
+  if (minutes < 45) return fmt(unitLabel(Math.round(minutes), "minute", style));
 
-  // < 90 minutes → "an hour"
-  if (minutes < 90) return format("an hour");
+  // < 90 minutes → "an hour" / "1 hr" / "1h"
+  if (minutes < 90) return fmt(articleUnit("hour", style));
 
-  // < 22 hours → "X hours"
-  if (hours < 22) {
-    const n = Math.round(hours);
-    return format(`${n} ${n === 1 ? "hour" : "hours"}`);
-  }
+  // < 22 hours → "X hours" / "X hrs" / "Xh"
+  if (hours < 22) return fmt(unitLabel(Math.round(hours), "hour", style));
 
   // < 36 hours → "yesterday" / "tomorrow"
   if (hours < 36) return isFuture ? "tomorrow" : "yesterday";
 
-  // < 26 days → "X days"
-  if (days < 26) {
-    const n = Math.round(days);
-    return format(`${n} ${n === 1 ? "day" : "days"}`);
-  }
+  // < 26 days → "X days" / "Xd"
+  if (days < 26) return fmt(unitLabel(Math.round(days), "day", style));
 
-  // < 46 days → "a month"
-  if (days < 46) return format("a month");
+  // < 46 days → "a month" / "1 mo" / "1mo"
+  if (days < 46) return fmt(articleUnit("month", style));
 
-  // < 11 months → "X months"
-  if (days < 330) {
-    const n = Math.round(months);
-    return format(`${n} ${n === 1 ? "month" : "months"}`);
-  }
+  // < 11 months → "X months" / "X mos" / "Xmo"
+  if (days < 330) return fmt(unitLabel(Math.round(months), "month", style));
 
-  // < 17 months → "a year"
-  if (days < 517) return format("a year");
+  // < 17 months → "a year" / "1 yr" / "1y"
+  if (days < 517) return fmt(articleUnit("year", style));
 
-  // 17+ months → "X years"
-  const n = Math.round(years);
-  return format(`${n} ${n === 1 ? "year" : "years"}`);
+  // 17+ months → "X years" / "X yrs" / "Xy"
+  return fmt(unitLabel(Math.round(years), "year", style));
 }
