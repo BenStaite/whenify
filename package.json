@@ -1,5 +1,5 @@
 {
-  "name": "whenify",
+  "name": "@benstaite/whenify",
   "version": "1.0.0",
   "description": "Convert a Date into a human-readable relative string like '4 days ago' or 'in 2 hours'",
   "main": "dist/index.js",

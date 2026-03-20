@@ -10,13 +10,13 @@ Convert a `Date` into a human-readable relative string with no dependencies.
 ## Installation
 
 ```sh
-npm install whenify
+npm install @benstaite/whenify
 ```
 
 ## Usage
 
 ```ts
-import { relativeDate } from "whenify";
+import { relativeDate } from "@benstaite/whenify";
 
 relativeDate(new Date(Date.now() - 5 * 60 * 1000)); // "5 minutes ago"
 relativeDate(new Date(Date.now() + 2 * 60 * 60 * 1000)); // "in 2 hours"
@@ -65,18 +65,20 @@ relativeDate(new Date(Date.now() + 4 * 24 * 60 * 60 * 1000), {
 });
 // "4 days away"
 
+const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+
 // custom past and future templates
-relativeDate(new Date(Date.now() - 2 * 60 * 60 * 1000), {
+relativeDate(twoHoursAgo, {
   format: { past: "{} in the past", future: "{} from now" },
 });
 // "2 hours in the past"
 
 // short unit labels
-relativeDate(new Date(Date.now() - 2 * 60 * 60 * 1000), { units: "short" });
+relativeDate(twoHoursAgo, { units: "short" });
 // "2 hrs ago"
 
 // narrow unit labels
-relativeDate(new Date(Date.now() - 2 * 60 * 60 * 1000), { units: "narrow" });
+relativeDate(twoHoursAgo, { units: "narrow" });
 // "2h ago"
 
 // combining units and format
