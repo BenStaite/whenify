@@ -20,7 +20,7 @@
     "humanize",
     "format"
   ],
-  "author": "",
+  "author": "Ben Staite",
   "license": "MIT",
   "jest": {
     "preset": "ts-jest",
