@@ -4,6 +4,11 @@
   "description": "Convert a Date into a human-readable relative string like '4 days ago' or 'in 2 hours'",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BenStaite/whenify"
+  },
+  "homepage": "https://www.npmjs.com/package/@benstaite/whenify",
   "files": [
     "dist"
   ],
